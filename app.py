@@ -8,6 +8,7 @@ import nltk
 # --- NLTK bootstrap: download only what we need (once) ---
 _NLTK_PKGS = [
     ("tokenizers/punkt", "punkt"),
+	("tokenizers/punkt_tab", "punkt_tab"),
     ("taggers/averaged_perceptron_tagger", "averaged_perceptron_tagger"),
     ("corpora/wordnet", "wordnet"),
     ("corpora/omw-1.4", "omw-1.4"),
