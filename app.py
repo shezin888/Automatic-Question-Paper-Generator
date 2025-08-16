@@ -5,19 +5,28 @@ from readpdf import Extractpdf
 import os 
 import nltk
 
-# --- NLTK bootstrap: download only what we need (once) ---
-_NLTK_PKGS = [
+
+# Put NLTK data in a writable folder (persists across boots on Render)
+NLTK_DATA_DIR = os.path.join(os.path.dirname(__file__), "nltk_data")
+os.makedirs(NLTK_DATA_DIR, exist_ok=True)
+if NLTK_DATA_DIR not in nltk.data.path:
+    nltk.data.path.insert(0, NLTK_DATA_DIR)
+
+# Download only what we need; check both old and new resource names
+NEEDED = [
     ("tokenizers/punkt", "punkt"),
-	("tokenizers/punkt_tab", "punkt_tab"),
+    ("tokenizers/punkt_tab", "punkt_tab"),  # new in recent NLTK
     ("taggers/averaged_perceptron_tagger", "averaged_perceptron_tagger"),
+    ("taggers/averaged_perceptron_tagger_eng", "averaged_perceptron_tagger_eng"),  # new name
     ("corpora/wordnet", "wordnet"),
     ("corpora/omw-1.4", "omw-1.4"),
 ]
-for path, pkg in _NLTK_PKGS:
+
+for path, pkg in NEEDED:
     try:
         nltk.data.find(path)
     except LookupError:
-        nltk.download(pkg)
+        nltk.download(pkg, download_dir=NLTK_DATA_DIR)
 
 app = Flask(__name__)
 
