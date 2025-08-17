@@ -85,39 +85,45 @@ class ObjectiveTest:
 
     @staticmethod
     def answer_options(word):
+        # Find noun synsets for the word
         synsets = wn.synsets(word, pos="n")
-
-        if len(synsets) == 0:
+        if not synsets:
             return []
-        else:
-            synset = synsets[0]
-        
-        hypernym = synset.hypernyms()[0]
-        hyponyms = hypernym.hyponyms()
-        similar_words = []
-        for hyponym in hyponyms:
-            similar_word = hyponym.lemmas()[0].name().replace("_", " ")
-            if similar_word != word:
-                similar_words.append(similar_word)
-            if len(similar_words) == 8:
-                break
-        return similar_words
+    
+        # Use the first synset that actually has a hypernym
+        for syn in synsets:
+            hypers = syn.hypernyms()
+            if not hypers:
+                continue
+            # Use the first hypernym and get its hyponyms for distractors
+            hypos = hypers[0].hyponyms()
+            similar = []
+            for h in hypos:
+                name = h.lemmas()[0].name().replace("_", " ")
+                if name.lower() != word.lower():
+                    similar.append(name)
+                if len(similar) >= 8:
+                    break
+            return similar
+    
+        # No hypernyms found for any synset -> no options
+        return []
+
 
     def generate_test(self):
         trivial_pair = self.get_trivial_sentences()
-        question_answer = list()
-        for que_ans_dict in trivial_pair:
-            if que_ans_dict["Key"] > int(self.noOfQues):
-                question_answer.append(que_ans_dict)
-            else:
-                continue
-        question = list()
-        answer = list()
-        while len(question) < int(self.noOfQues):
-            rand_num = np.random.randint(0, len(question_answer))
-            if question_answer[rand_num]["Question"] not in question:
-                question.append(question_answer[rand_num]["Question"])
-                answer.append(question_answer[rand_num]["Answer"])
-            else:
-                continue
+        question_answer = [d for d in trivial_pair if d and d.get("Key", 0) > int(self.noOfQues)]
+    
+        if not question_answer:
+            return [], []  # let the caller flash a message
+    
+        target_n = min(int(self.noOfQues), len(question_answer))
+        question, answer = [], []
+        from random import shuffle
+        shuffle(question_answer)
+        for qa in question_answer[:target_n]:
+            if qa["Question"] not in question:
+                question.append(qa["Question"])
+                answer.append(qa["Answer"])
         return question, answer
+    
